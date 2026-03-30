@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import itertools
 import re
+import os
 
 # ==========================================
 # 1. ตั้งค่าหน้าเพจและ CSS 
@@ -18,7 +19,7 @@ st.markdown("""
     .header-banner h1 { margin: 0; font-size: 1.8rem; font-weight: 700; color: white !important; }
     .header-banner p { margin: 5px 0 0 0; font-size: 1rem; opacity: 0.9; color: white !important; }
     
-    /* 🛠️ ปรับแต่งปุ่ม คู่มือการใช้งาน ให้เด่นชัด */
+    /* 🛠️ ปุ่มคู่มือการใช้งาน */
     [data-testid="stExpander"] summary {
         background-color: #e0f2fe !important;
         border: 2px solid #0284c7 !important;
@@ -123,17 +124,23 @@ st.markdown("""
 
 # 💡 ส่วนของ "คู่มือการใช้งาน" (แสดงเฉพาะรูปภาพ)
 with st.expander("คลิกที่นี่เพื่อดู คู่มือการใช้งานเบื้องต้น (How to use)", expanded=False):
-    try:
-        # หากเซฟรูปเป็น .jpg ให้แก้บรรทัดล่างนี้เป็น "guide.jpg"
-        st.image("guide.png", use_container_width=True) 
-    except:
-        st.info("🖼️ ไม่พบรูปภาพ กรุณานำไฟล์รูป guide.png มาใส่ในโฟลเดอร์เดียวกับโปรแกรม")
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    img_found = False
+    for ext in [".png", ".jpg", ".jpeg"]:
+        img_path = os.path.join(current_dir, "guide" + ext)
+        if os.path.exists(img_path):
+            st.image(img_path, use_container_width=True)
+            img_found = True
+            break
+    if not img_found:
+        st.info("🖼️ กรุณานำไฟล์รูปชื่อ guide.png วางไว้ในโฟลเดอร์เดียวกันกับโปรแกรม")
 
+# 📌 นิยามศัพท์การแปรผล (ลบวงเล็บออกแล้ว)
 st.markdown("""
     <div class="legend-box">
         <b style="color:#0f172a; font-size:1.05rem;">📌 นิยามศัพท์การแปรผล:</b>
         <div class="legend-item" style="margin-top:10px;"><div class="legend-color bg-red"></div><span class="legend-text"><b>🔴 สีแดง (Incompatible):</b> ยาเข้ากันไม่ได้ ห้ามผสมกันหรือห้ามให้ร่วมกันโดยเด็ดขาด</span></div>
-        <div class="legend-item"><div class="legend-color bg-yellow"></div><span class="legend-text"><b>🟡 สีเหลือง (Variable result):</b> ไม่แนะนำให้ใช้ เนื่องจากผลลัพธ์ไม่แน่นอน (แปรผันตามความเข้มข้น, pH หรือเวลา)</span></div>
+        <div class="legend-item"><div class="legend-color bg-yellow"></div><span class="legend-text"><b>🟡 สีเหลือง (Variable result):</b> ไม่แนะนำให้ใช้ เนื่องจากผลลัพธ์ไม่แน่นอน</span></div>
         <div class="legend-item"><div class="legend-color bg-green"></div><span class="legend-text"><b>🟢 สีเขียว (Compatible):</b> ยาเข้ากันได้ สามารถผสมกันหรือให้ร่วมกันได้</span></div>
     </div>
 """, unsafe_allow_html=True)
@@ -181,6 +188,7 @@ if df is not None:
                 
                 def render_route(label, codes, drug_names):
                     code = next((c for c in codes if c in res), "ND")
+                    # ป้ายสถานะ (ลบวงเล็บออกแล้ว)
                     mapping = {
                         "X": ("bg-red", "🔴 INCOMPATIBLE", "advice-red"), "I": ("bg-red", "🔴 INCOMPATIBLE", "advice-red"),
                         "V": ("bg-yellow", "🟡 Variable result", "advice-yellow"), "U": ("bg-yellow", "🟡 Variable result", "advice-yellow"),
